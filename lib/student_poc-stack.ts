@@ -71,7 +71,7 @@ export class StudentPocStack extends cdk.Stack {
     studentApi.addMethod("GET", new apigateway.LambdaIntegration(getAllTest));
     studentApi.addMethod("PUT", new apigateway.LambdaIntegration(updateTest));
 
-    const studentByID = api.root.addResource("studentByID");
+    const studentByID = api.root.addResource("studentById");
     studentByID.addMethod("GET", new apigateway.LambdaIntegration(getAllTestByID));
 
 
