@@ -2,25 +2,19 @@ import * as AWS from "aws-sdk";
 
 const db = new AWS.DynamoDB.DocumentClient();
 const TABLENAME = process.env.TABLE_NAME || "student";
-const PK = "S123";
-const SK = "T123";
 
 exports.createNewTest = async function (event: any) {
   try {
-    console.log("POC", event.path);
-    console.log("POC", event.httpMethod);
-
     const data =
       typeof event.body === "object" ? event.body : JSON.parse(event.body);
-    data["PK"] = PK;
-    data["SK"] = SK;
+    data["PK"] = `STUDENT${Math.floor(32 * Math.random() * 4)}`;
+    data["SK"] = `TEST${Math.floor(32 * Math.random() * 4)}`;
 
     const params = {
       TableName: TABLENAME,
       Item: data,
     };
 
-    console.log("data----------", data);
     const response = await db.put(params).promise();
 
     return {
@@ -93,8 +87,7 @@ exports.getTestByStudentID = async function (event: any) {
 };
 exports.updateTest = async function (event: any) {
   try {
-    console.log("POC", event.path);
-    console.log("POC", event.httpMethod);
+   
     const data =
       typeof event.body === "object" ? event.body : JSON.parse(event.body);
 
@@ -102,12 +95,12 @@ exports.updateTest = async function (event: any) {
     const params = {
       TableName: TABLENAME,
       Key: {
-        PK: PK,
-        SK: SK,
+        PK: event.query.PK,
+        SK: event.query.SK,
       },
-      UpdateExpression: "set info.plot = :i",
+      UpdateExpression: "set GradeLevel = :GL",
       ExpressionAttributeValues: {
-        ":i": data.info.plot,
+        ":GL": data.GradeLevel,
       },
       ReturnValues: "UPDATED_NEW",
     };
@@ -118,6 +111,32 @@ exports.updateTest = async function (event: any) {
       body: JSON.stringify(response),
     };
   } catch (err) {
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "text/json" },
+      body: JSON.stringify(err),
+    };
+  }
+};
+exports.deleteTest = async function (event: any) {
+  try {
+    const params = {
+      TableName: TABLENAME,
+      Key: {
+        PK: event.PK,
+        SK: event.SK,
+      },
+    };
+
+    const response = await db.delete(params).promise();
+    console.log(response);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "text/json" },
+      body: JSON.stringify(response),
+    };
+  } catch (err) {
+    console.log(err);
     return {
       statusCode: 500,
       headers: { "Content-Type": "text/json" },

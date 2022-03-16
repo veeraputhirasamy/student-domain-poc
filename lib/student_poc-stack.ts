@@ -56,10 +56,22 @@ export class StudentPocStack extends cdk.Stack {
       },
     });
 
-    studentTable.grantReadWriteData(getAllTest);
-    studentTable.grantReadWriteData(updateTest);
-    studentTable.grantReadWriteData(createImportTest);
-    studentTable.grantReadWriteData(getAllTestByID);
+    const deletTest = new lambda.Function(this, "deleteStudentTest", {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset("src/lambda"),
+      handler: "student.deleteTest",
+      environment: {
+        TABLE_NAME: studentTable.tableName,
+        PARTITION_KEY: "studentID",
+      },
+    });
+
+    studentTable.grantFullAccess(getAllTest);
+    studentTable.grantFullAccess(updateTest);
+    studentTable.grantFullAccess(createImportTest);
+    studentTable.grantFullAccess(getAllTestByID);
+    studentTable.grantFullAccess(deletTest);
+
     //Apigateway
 
     const api = new apigateway.RestApi(this, "studentApi", {
@@ -70,6 +82,8 @@ export class StudentPocStack extends cdk.Stack {
     studentApi.addMethod("POST", new apigateway.LambdaIntegration(createImportTest));
     studentApi.addMethod("GET", new apigateway.LambdaIntegration(getAllTest));
     studentApi.addMethod("PUT", new apigateway.LambdaIntegration(updateTest));
+    studentApi.addMethod("DELETE", new apigateway.LambdaIntegration(deletTest));
+
 
     const studentByID = api.root.addResource("studentById");
     studentByID.addMethod("GET", new apigateway.LambdaIntegration(getAllTestByID));
